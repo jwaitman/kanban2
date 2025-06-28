@@ -1,69 +1,116 @@
 <?php
+// api/v1/_helpers/auth.php
 require_once __DIR__ . '/../../../config/app.php';
 require_once __DIR__ . '/../../../vendor/autoload.php';
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/response.php'; // Include for send_json_response
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
-function generate_jwt($user_id) {
-    $issued_at = time();
-    $expiration_time = $issued_at + JWT_EXP;
+// --- Constants Check ---
+// Ensure constants from config/app.php are defined to avoid fatal errors.
+if (!defined('JWT_SECRET')) die('JWT_SECRET is not defined. Please check config/app.php');
+if (!defined('JWT_EXP')) define('JWT_EXP', 3600);
+if (!defined('REFRESH_TOKEN_EXP')) define('REFRESH_TOKEN_EXP', 604800);
+if (!defined('APP_URL')) die('APP_URL is not defined. Please check config/app.php');
+if (!defined('APP_ENV')) define('APP_ENV', 'production');
+
+// --- Password Security ---
+function hash_password(string $password): string {
+    // Use PASSWORD_DEFAULT which is guaranteed to be strong and updated in future PHP versions.
+    // Argon2id is the default since PHP 7.4.
+    return password_hash($password, PASSWORD_DEFAULT);
+}
+
+function verify_password(string $password, string $hash): bool {
+    return password_verify($password, $hash);
+}
+
+// --- JWT Generation ---
+function generate_jwt(int $user_id, string $username, string $role): string {
+    $issuedAt = time();
+    $expirationTime = $issuedAt + JWT_EXP;
     $payload = [
-        'iat' => $issued_at,
-        'exp' => $expiration_time,
-        'sub' => $user_id
+        'iat' => $issuedAt,
+        'exp' => $expirationTime,
+        'iss' => APP_URL, // Issuer
+        'aud' => APP_URL, // Audience
+        'data' => [
+            'user_id' => $user_id,
+            'username' => $username,
+            'role' => $role
+        ]
     ];
+
     return JWT::encode($payload, JWT_SECRET, 'HS256');
 }
 
-function generate_refresh_token($user_id) {
-    $issued_at = time();
-    $expiration_time = $issued_at + REFRESH_TOKEN_EXP;
+function generate_refresh_token(int $user_id): string {
+    $issuedAt = time();
+    $expirationTime = $issuedAt + REFRESH_TOKEN_EXP;
     $payload = [
-        'iat' => $issued_at,
-        'exp' => $expiration_time,
-        'sub' => $user_id
+        'iat' => $issuedAt,
+        'exp' => $expirationTime,
+        'iss' => APP_URL,
+        'aud' => APP_URL,
+        'data' => [
+            'user_id' => $user_id
+        ]
     ];
-    return JWT::encode($payload, JWT_SECRET, 'HS256');
+    // In a real-world scenario, you might store this token in a database
+    // to allow for revocation.
+    return JWT::encode($payload, JWT_SECRET, 'HS256'); 
 }
 
-function get_user_from_token($db) {
+function set_refresh_token_cookie(string $token): void {
+    setcookie('refresh_token', $token, [
+        'expires' => time() + REFRESH_TOKEN_EXP,
+        'httponly' => true,
+        'secure' => APP_ENV === 'production', // Use secure cookies in production
+        'samesite' => 'Strict' // Or 'Lax'
+    ]);
+}
+
+// --- JWT Validation & Authorization ---
+function get_jwt_from_header(): ?string {
     $headers = getallheaders();
-    if (!isset($headers['Authorization'])) {
+    if (isset($headers['Authorization'])) {
+        $authHeader = $headers['Authorization'];
+        if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            return $matches[1];
+        }
+    }
+    return null;
+}
+
+function validate_jwt(?string $jwt): ?object {
+    if (!$jwt) {
         return null;
     }
-
-    $auth_header = $headers['Authorization'];
-    if (strpos($auth_header, 'Bearer ') !== 0) {
-        return null;
-    }
-
-    $token = substr($auth_header, 7);
-
     try {
-        $decoded = JWT::decode($token, new Key(JWT_SECRET, 'HS256'));
-        $user_id = $decoded->sub;
-
-        $stmt = $db->prepare("SELECT id, username, role FROM users WHERE id = ?");
-        $stmt->bind_param('i', $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->fetch_assoc();
+        return JWT::decode($jwt, new Key(JWT_SECRET, 'HS256'));
     } catch (Exception $e) {
-        // This includes token expiration, invalid signature, etc.
-        error_log("JWT Validation Error: " . $e->getMessage());
+        // Log error: $e->getMessage()
         return null;
     }
 }
 
-function get_user_or_exit($db) {
-    $user = get_user_from_token($db);
-    if (!$user) {
-        http_response_code(401);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Unauthorized']);
-        exit();
+function get_current_user_data(): ?object {
+    $jwt = get_jwt_from_header();
+    $decoded = validate_jwt($jwt);
+    return $decoded->data ?? null;
+}
+
+function require_auth(array $allowed_roles = []): object {
+    $user_data = get_current_user_data();
+
+    if (!$user_data) {
+        send_json_response(['error' => 'Authentication required'], 401);
     }
-    return $user;
+
+    if (!empty($allowed_roles) && !in_array($user_data->role, $allowed_roles)) {
+        send_json_response(['error' => 'Forbidden: Insufficient permissions'], 403);
+    }
+
+    return $user_data;
 }

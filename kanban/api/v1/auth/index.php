@@ -4,6 +4,7 @@ require_once __DIR__ . '/../_helpers/database.php';
 require_once __DIR__ . '/../_helpers/response.php';
 require_once __DIR__ . '/../_helpers/auth.php';
 require_once __DIR__ . '/../_helpers/audit.php';
+require_once __DIR__ . '/../_helpers/rate_limiter.php';
 
 // Required for frontend (CORS)
 header("Access-Control-Allow-Origin: *");
@@ -42,6 +43,9 @@ function handle_login($db) {
     if ($_SERVER["REQUEST_METHOD"] !== 'POST') {
         send_json_response(['error' => 'Invalid request method for login'], 405);
     }
+
+    // Rate limit login attempts by IP address
+    check_rate_limit($_SERVER['REMOTE_ADDR'], 'login');
 
     $data = json_decode(file_get_contents("php://input"));
 

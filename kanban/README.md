@@ -42,3 +42,40 @@ This project includes a comprehensive setup script that automates the installati
     cd frontend
     npm run dev
     ```
+
+## Security Features
+
+The Kanban task management system includes several security features to protect your data and ensure secure access:
+
+- **SSL Encryption**: All data transmitted between the client and server is encrypted using SSL/TLS. A self-signed certificate is generated during the setup, but you should replace it with a valid certificate from a trusted certificate authority.
+
+- **Firewall Configuration**: The setup script configures UFW (Uncomplicated Firewall) to allow only necessary ports (80, 443, 22) and denies all other incoming connections.
+
+- **Fail2Ban Integration**: This tool is installed and configured to protect the server from brute-force attacks.
+
+- **Secure Apache Configuration**: The Apache configuration is hardened to disable unnecessary modules, restrict access to sensitive files, and prevent directory listing.
+
+- **Environment File**: Sensitive configuration values are stored in a `.env` file in the project root, which is not accessible from the web.
+
+## Troubleshooting Common Issues
+
+- **Permission Denied Errors**: Ensure that the user running the commands has the necessary permissions. Use `sudo` where required.
+
+- **Apache Not Starting**: Check the Apache error log at `/var/log/apache2/error.log` for details. Common issues include syntax errors in the configuration files or port conflicts.
+
+- **Database Connection Issues**: Ensure that the MySQL service is running and that the credentials in the `.env` file are correct.
+
+- **Node.js Errors**: Ensure that Node.js and npm are correctly installed and accessible in your PATH.
+
+## Contributing
+
+Contributions are welcome! Please read the `CONTRIBUTING.md` file for details on how to contribute to this project.
+
+## License
+
+This project is licensed under the MIT License - see the `LICENSE` file for details.
+
+## Acknowledgments
+
+- Inspired by the need for a secure, efficient task management system.
+- Thanks to the open-source community for their invaluable tools and libraries.

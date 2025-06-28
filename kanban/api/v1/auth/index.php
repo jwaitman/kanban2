@@ -1,17 +1,12 @@
 <?php
 // api/v1/auth/index.php
+require_once __DIR__ . '/../_helpers/cors.php'; // MUST be the first line
+
 require_once __DIR__ . '/../_helpers/database.php';
 require_once __DIR__ . '/../_helpers/response.php';
 require_once __DIR__ . '/../_helpers/auth.php';
 require_once __DIR__ . '/../_helpers/audit.php';
 require_once __DIR__ . '/../_helpers/rate_limiter.php';
-
-// Required for frontend (CORS)
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST, GET");
-header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 $db = connect_to_database();
 $request_method = $_SERVER["REQUEST_METHOD"];

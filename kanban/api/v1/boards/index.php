@@ -1,16 +1,10 @@
 <?php
 // api/v1/boards/index.php
+require_once __DIR__ . '/../_helpers/cors.php'; // MUST be the first line
 
 require_once __DIR__ . '/../_helpers/database.php';
 require_once __DIR__ . '/../_helpers/response.php';
 require_once __DIR__ . '/../_helpers/auth.php';
-
-// Set common headers
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
-header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 $db = connect_to_database();
 $request_method = $_SERVER["REQUEST_METHOD"];
@@ -21,14 +15,14 @@ $board_id = end($parts) == 'boards' ? null : (int)end($parts);
 
 switch ($request_method) {
     case 'GET':
-        if ($board_id) {
-            handle_get_board($db, $board_id);
+        if (isset($_GET['id'])) {
+            handle_get_single_board($db, $current_user);
         } else {
             handle_get_all_boards($db);
         }
         break;
     case 'POST':
-        handle_create_board($db);
+        handle_create_board($db, $current_user);
         break;
     case 'PUT':
         handle_update_board($db, $board_id);

@@ -92,6 +92,14 @@ cd "${PROJECT_ROOT}/frontend"
 sudo -u ${WEB_USER} npm install
 sudo -u ${WEB_USER} npm run build
 
+# Move built frontend assets to the public web root
+echo "STEP 7b: Moving built frontend assets to the web root..."
+# Ensure the public directory exists and is empty
+mkdir -p "${PROJECT_ROOT}/public"
+rm -rf "${PROJECT_ROOT}/public/*"
+# Move the contents of the dist folder to the public folder
+mv "${PROJECT_ROOT}/frontend/dist/"* "${PROJECT_ROOT}/public/"
+
 # 8. Generate Self-Signed SSL Certificate
 echo "STEP 8: Generating self-signed SSL certificate..."
 mkdir -p /etc/ssl/private

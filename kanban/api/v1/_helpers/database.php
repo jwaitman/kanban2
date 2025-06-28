@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../../config/database.php';
+// api/v1/_helpers/database.php
+require_once __DIR__ . '/../../../config/database.php';
 
 class Database {
     private static $instance = null;
@@ -23,4 +24,12 @@ class Database {
     public function getConnection() {
         return $this->conn;
     }
+}
+
+/**
+ * Procedural wrapper to get the database connection.
+ * This allows legacy or procedural code to easily get the singleton connection.
+ */
+function connect_to_database() {
+    return Database::getInstance()->getConnection();
 }

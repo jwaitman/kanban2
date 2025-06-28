@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Project Requirements - Kanban System</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; padding: 2em; max-width: 900px; margin: 0 auto; color: #333; }
+        h1, h2, h3, h4 { color: #005a9c; }
+        h1 { border-bottom: 3px solid #005a9c; padding-bottom: 10px; font-size: 2.5em; }
+        h2 { border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-top: 2em; }
+        code { background-color: #eef; padding: 3px 7px; border-radius: 5px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+        pre { background-color: #eef; padding: 1em; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
+        .container { background-color: #fff; padding: 2em; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px; }
+        ul, ol { padding-left: 20px; }
+        li { margin-bottom: 0.5em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kanban Task Management System: Complete Requirements</h1>
+
+        <h2>1. High-Level Objective</h2>
+        <p>To design, develop, and deploy a complete, security-hardened, and production-ready Kanban Task Management System. The final deliverable must include all source code (backend and frontend), comprehensive user documentation, and a single, fully automated setup script that deploys the entire system on a fresh Ubuntu 24.04 server. The system must be fully functional "out-of-the-box" after the script completes, with no manual intervention required.</p>
+
+        <h2>2. Core Functional Requirements & User Stories</h2>
+        
+        <h3>2.1. User Roles & Permissions</h3>
+        <ul>
+            <li><strong>Admin:</strong> Can manage all boards, users, and system settings.</li>
+            <li><strong>Manager:</strong> Can create, edit, and delete boards. Can manage users assigned to their boards.</li>
+            <li><strong>User:</strong> Can view and move tasks on boards they are assigned to. Can create and comment on tasks.</li>
+        </ul>
+
+        <h3>2.2. Feature Set</h3>
+        <ul>
+            <li><strong>Authentication:</strong> Secure user login and registration. Session management using JSON Web Tokens (JWT).</li>
+            <li><strong>Dashboard:</strong> A central view showing all boards a user has access to.</li>
+            <li><strong>Kanban Board:</strong>
+                <ul>
+                    <li>Visual representation of a project with columns (e.g., "To Do", "In Progress", "Done").</li>
+                    <li>Ability to create, edit, and delete boards and columns.</li>
+                    <li>Tasks represented as cards that can be dragged and dropped between columns.</li>
+                </ul>
+            </li>
+            <li><strong>Tasks (Cards):</strong>
+                <ul>
+                    <li>Should have a title, description, assignee, due date, and priority.</li>
+                    <li>Users can create, update, and delete tasks.</li>
+                    <li>A comment system for each task to allow for discussion.</li>
+                </ul>
+            </li>
+            <li><strong>Search & Filtering:</strong> Ability to search for tasks by title or description and filter tasks by user or due date.</li>
+            <li><strong>Notifications:</strong> (Optional/Future) In-app notifications for task assignments and mentions.</li>
+        </ul>
+
+        <h2>3. Technical & Architectural Specifications</h2>
+
+        <h3>3.1. Directory Structure</h3>
+        <p>The project must adhere to the following structure:</p>
+        <pre><code>kanban/
+├── api/            # PHP backend source
+├── config/         # PHP configuration files (app.php, database.php)
+├── db/             # SQL schema and seed files
+├── documents/      # User documentation
+├── frontend/       # All Vue.js source code, including index.html and package.json
+│   ├── src/
+│   └── vite.config.js
+├── public/         # Web server document root. Will contain compiled frontend assets.
+│   ├── index.php   # The single entry point for the PHP API.
+│   └── requirements.html # This document
+└── scripts/        # Automation and utility scripts
+</code></pre>
+
+        <h3>3.2. Backend (PHP API)</h3>
+        <ul>
+            <li><strong>Language:</strong> Modern, object-oriented PHP 8+.</li>
+            <li><strong>Configuration:</strong> Database credentials and other settings <strong>must</strong> be read from constants defined in <code>config/database.php</code>. The application <strong>must not</strong> use a <code>.env</code> file.</li>
+            <li><strong>API Endpoints:</strong> Provide RESTful endpoints for all CRUD operations on boards, columns, tasks, users, and comments.</li>
+            <li><strong>Security:</strong> Implement JWT for stateless authentication. All API endpoints (except login/register) must be protected.</li>
+        </ul>
+
+        <h3>3.3. Frontend (Vue 3 Application)</h3>
+        <ul>
+            <li><strong>Framework:</strong> Vue 3 with Vite as the build tool.</li>
+            <li><strong>Location:</strong> All source code, including <code>index.html</code>, <code>package.json</code>, and <code>vite.config.js</code>, must reside within the <code>frontend/</code> directory.</li>
+            <li><strong>Pathing:</strong> All internal module import paths must be correctly resolved relative to the <code>frontend/src/</code> directory (e.g., <code>./views/Component.vue</code>).</li>
+            <li><strong>Build Process:</strong> The <code>vite.config.js</code> file must be configured to:
+                <ul>
+                    <li>Recognize <code>frontend/index.html</code> as the main input.</li>
+                    <li>Compile all production assets into the top-level <code>public/</code> directory, which must be cleared before each build.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>3.4. Database (MySQL)</h3>
+        <ul>
+            <li>A <code>db/schema.sql</code> file must define the full database structure.</li>
+            <li>A <code>db/seed.sql</code> file must populate the database with initial data (e.g., a default admin user, a sample board).</li>
+        </ul>
+
+        <h2>4. Automation & Deployment (`scripts/setup.sh`)</h2>
+        <ul>
+            <li><strong>Target OS:</strong> Fresh Ubuntu 24.04 server.</li>
+            <li><strong>Execution:</strong> The script must perform a full, unattended setup.</li>
+            <li><strong>Idempotency:</strong> The script should be safely re-runnable where possible.</li>
+            <li><strong>Robustness:</strong> Must handle special characters in generated secrets. Use a non-conflicting delimiter (e.g., <code>#</code>) in <code>sed</code> commands involving passwords.</li>
+            <li><strong>Automated Tasks:</strong>
+                <ol>
+                    <li>Install system dependencies: Apache2, MySQL, PHP 8+, Node.js, Composer.</li>
+                    <li>Create a MySQL database and a dedicated user with a randomly generated password.</li>
+                    <li>Inject the generated credentials directly into <code>config/database.php</code>.</li>
+                    <li>Import the database schema and seed data.</li>
+                    <li>Configure and enable an Apache virtual host pointing to the <code>public/</code> directory.</li>
+                    <li>Set correct file ownership (<code>www-data:www-data</code>) for the entire project directory.</li>
+                    <li>Install all PHP (Composer) and Node.js (npm) dependencies as the <code>www-data</code> user.</li>
+                    <li>Build the frontend for production (<code>npm run build</code>) as the <code>www-data</code> user.</li>
+                    <li>Update <code>/etc/hosts</code> to resolve <code>kanban.local</code> to <code>127.0.0.1</code>.</li>
+                </ol>
+            </li>
+        </ul>
+
+        <h2>5. Documentation</h2>
+        <ul>
+            <li>Create a <code>documents/</code> directory.</li>
+            <li>Provide three separate Markdown files:
+                <ul>
+                    <li><code>admin_guide.md</code></li>
+                    <li><code>manager_guide.md</code></li>
+                    <li><code>user_guide.md</code></li>
+                </ul>
+            </li>
+            <li>Each guide should explain the features available to that role and include placeholders for screenshots (e.g., `[Screenshot: Board View]`).</li>
+        </ul>
+    </div>
+</body>
+</html>
